@@ -1,7 +1,7 @@
-const path = require('path');
-const express = require('express');
+import * as express from 'express';
+import * as socketio from 'socket.io';
+
 const app = express();
-const { Server } = require('socket.io');
 
 interface ServerToClientEvents {
   noArg: () => void;
@@ -34,9 +34,15 @@ app.get('/', (_req, res) => {
 
 const server = app.listen(9000);
 
-const io = new Server(server);
+const io = new socketio.Server<
+  ClientToServerEvents,
+  ServerToClientEvents,
+  InterServerEvents,
+  SocketData
+>(server);
 
 io.on('connection', (socket) => {
-  console.log(socket.server.engine.clientsCount);
-  socket.emit('joinGame', socket.server.engine.clientsCount);
+  const clientsCount: number = io.of('/').sockets.size;
+  console.log(clientsCount);
+  socket.emit('joinGame', clientsCount);
 });
